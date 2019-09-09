@@ -6,6 +6,7 @@ output:
   bookdown::html_document2:
     fig_cap: true
     code_folding: "show"
+    css: "preface.css"
 runtime: shiny
 ---
 
@@ -19,66 +20,11 @@ m = 5
 b = 3
 ```
 
-<!-- This is an Rmarkdown document -->
-<!-- Rmarkdown allows you to embed lots of different types of objects together: -->
-<!-- And everything is "knit" together using Pandoc (https://pandoc.org/) -->
+# Welcome!
 
-<!-- - HTML -->
-<!-- - CSS -->
-<!-- - R code -->
-<!-- - Python Code -->
-<!-- - LaTeX equations -->
-<!-- - Text  -->
-<!-- - Images -->
-<!-- - Tables -->
-
-<!-- This is some CSS code used to style to output document -->
-<!-- Normally this would be included in a separate file -->
-<!-- But for this demo I decided to put everything in the same file -->
-
-<style>
-.remember {border:2px solid orange;margin: 40px 0 40px 0;}
-.remember h3 {background:orange;color:white;padding-bottom:10px; font-weight: bold;}
-.remember p {color:black;padding:10px; font-size: 18px;margin: 20px auto 20px 20%;}
-
-.remember:before{
-
- content: "Remember";
- font-weight: bold;
- font-size: 20px;
- color: black;
- background-color: orange;
- padding: 5px 25px 5px 25px;
- margin-left: 5%;
- margin-top: -40px;
- display: inline-table;
-}
-
-p{
- font-size: 1.75em;
- line-height: 1.5em;
- margin-top: 20px;
- margin-bottom: 50px;
-}
-
-.container-fluid.main-container{
-  max-width: 1500px !important;
-}
-
-ul li {
- font-size: 1.75em;
-}
-ol li {
- font-size: 1.75em;
-}
-pre.r{
- font-size: 1.75em !important;
-}
-</style>
+This document introduces you to the R programming language, by way of demonstrating how to optimize a model to fit data and how to understand/visualize model uncertainty.  Specifically, this tutorial discusses two commonly used optimization methods: least-squares and maximum likelihood.  As this may be your first experience using R, let's first jump over to [this tutorial](https://datasciencelabs.io/r-basics/install.html) to understand the tools we'll be using and how to get them properly configured.
 
 # Background <!-- In markdown a single `#` represents a major heading -->
-
-This document introduces you to the R programming language, by way of demonstrating how to optimize a model to fit data and how to understand/visualize model uncertainty.  Specifically, this tutorial discusses two commonly used optimization methods: least-squares and maximum likelihood.
 
 Uncertainty exists as a consequence of having either imperfect or incomplete information -- or both. Information may be imperfect as result of being collected, managed, and/or processed by humans (&ast;cough&ast; <a target=" " href="https://www.latimes.com/archives/la-xpm-1999-oct-01-mn-17288-story.html">**NASA**</a> &ast;cough&ast;).  Information may also be imperfect as result of software altering data in unknown ways (<a target=" " href="https://github.com/jennybc/scary-excel-stories">**WTF Excel?!?!**</a>).  Information is almost always incomplete because we don't know what data we'll need to collect until after we collected some and know what questions we should have asked in the first place. This type of uncertainty is called <b>alleatory or irreducible</b> uncertainty - which means a source of uncertainty that we CANNOT eliminate with the data we have available.
 
@@ -88,10 +34,18 @@ However, there is another type of uncertainty -- called model uncertainty -- tha
 <p>All models are wrong, some models are useful!</p>
 </div> 
 
-## Required packages
+## Required packages <!-- In markdown a double `#` represents a second-level heading -->
 
 ```{r, eval=FALSE, echo=TRUE}
-install.packages(c("plotly","shiny","glue"))
+pkgs <- c("plotly",    # R interface to the plotly graphics library
+          "shiny",     # Create interactive JavaScript visualizations
+          "glue",      # Glue strings together
+          "rmarkdown", # Create reproducible reports
+          "tidyverse", # Suite of packages for data analysis, visualization, etc.
+          "bookdown"   # Generate and publish books and reports in R
+          )
+
+install.packages(pkgs)
 ```
 
 ```{r, message=FALSE}
@@ -110,13 +64,18 @@ In general, optimizing a model requires at least three ingredients:
 
 ## Example
 
-Suppose you are asked to create a model to describe the relationship between some some inputs and outputs where the data look like what is shown Figure \@ref(fig:simpledata) below.
+Suppose you are asked to create a model to describe the relationship between some inputs and some outputs where the data look like what is shown Figure \@ref(fig:simpledata) below.
 
 ```{r simpledata, fig.cap="A example of some simple data"}
-par(cex.axis = 1.1, cex.lab = 1.1, font = 2, las = 1)
+par(cex.axis = 1.1, # enlarge font for values printed to axes
+    cex.lab = 1.1,  # enlarge font for axis labels
+    font = 2,       # set font to bold type
+    las = 1)        # rotate axis labels in the reading direction
 
+# Create a data.frame object
 df <- data.frame(x = seq(0, 6, by = 0.5))
 
+# Add a "column" y to the data.frame df
 df$y <- 5 * df$x + 3
 
 # plot() opens a new "base" R graphics device
@@ -197,7 +156,7 @@ ggplot(df, aes(x,y)) +
   ylab(expression(y(x) == m%*%x + b))
 ```
 
-Thus fay, we've chosen a functional form that we believe is a good representation of the data -- and a corresponding loss function. Now let's use R's optimization workhorse function `optim()` to find the values of of $m$ and $b$ minimize the loss function and results in a model that best-fits the data. Note: you can learn more about this function by entering `?optim` at the R console.  Putting a question mark before any R function will bring up that function documenation page (if it exists).  
+Thus far, we've chosen a functional form that we believe is a good representation of the data -- and a corresponding loss function. Now, let's use R's optimization workhorse function `optim()` to find the values of of $m$ and $b$ minimize the loss function and results in a model that best-fits the data. Note: you can learn more about this function by entering `?optim` at the R console.  Putting a question mark before any R function will bring up that function documenation page (if it exists).  
 
 Our optimization is carried out in the code chunk below.
 
